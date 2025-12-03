@@ -1,62 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-
-// Calculate invoice number based on pay period
-// Pay periods are 2-week blocks (Sunday to Saturday)
-// Payment is on Friday of the week with the 2nd Monday after the period ends
-// Reference: Nov 9-22, 2025 period → paid Nov 28, 2025
-const getInvoiceNumber = (dateString) => {
-  const date = new Date(dateString)
-  
-  // Reference pay period: Nov 9, 2025 (Sunday) to Nov 22, 2025 (Saturday)
-  const referenceStart = new Date('2025-11-09') // A Sunday
-  
-  // Calculate the difference in days from reference
-  const diffTime = date.getTime() - referenceStart.getTime()
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-  
-  // Each pay period is 14 days
-  const periodOffset = Math.floor(diffDays / 14)
-  
-  // Calculate the end date of this period (Saturday)
-  const periodStart = new Date(referenceStart)
-  periodStart.setDate(periodStart.getDate() + (periodOffset * 14))
-  
-  const periodEnd = new Date(periodStart)
-  periodEnd.setDate(periodEnd.getDate() + 13) // Saturday
-  
-  // Payment date is the Friday after the 2nd Monday after period ends
-  // Period ends Saturday → next day is Sunday → Monday is +1 → 2nd Monday is +8 → Friday is +12
-  // So payment Friday is periodEnd + 7 days
-  const paymentDate = new Date(periodEnd)
-  paymentDate.setDate(paymentDate.getDate() + 7)
-  
-  // Format: INV-YYYY-MM-DD
-  const year = paymentDate.getFullYear()
-  const month = String(paymentDate.getMonth() + 1).padStart(2, '0')
-  const day = String(paymentDate.getDate()).padStart(2, '0')
-  
-  return `INV-${year}-${month}-${day}`
-}
-
-// Get pay period date range for display
-const getPayPeriodRange = (dateString) => {
-  const date = new Date(dateString)
-  const referenceStart = new Date('2025-11-09')
-  
-  const diffTime = date.getTime() - referenceStart.getTime()
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-  const periodOffset = Math.floor(diffDays / 14)
-  
-  const periodStart = new Date(referenceStart)
-  periodStart.setDate(periodStart.getDate() + (periodOffset * 14))
-  
-  const periodEnd = new Date(periodStart)
-  periodEnd.setDate(periodEnd.getDate() + 13)
-  
-  const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  
-  return `${formatDate(periodStart)} - ${formatDate(periodEnd)}`
-}
+import { useState, useEffect, useRef } from 'react'
+import { getInvoiceNumber, getPayPeriodRange } from './utils/invoiceUtils'
+import InvoiceModal from './components/InvoiceModal'
 
 function App() {
   const [entries, setEntries] = useState([])
@@ -70,6 +14,7 @@ function App() {
   })
   const [editingIndex, setEditingIndex] = useState(null)
   const [editData, setEditData] = useState(null)
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
   const editingRowRef = useRef(null)
   const editDataRef = useRef(null)
   const editingIndexRef = useRef(null)
@@ -250,9 +195,20 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-9xl mx-auto">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Time Tracker</h1>
-          <p className="text-gray-600">Manage your contractor hours</p>
+        <header className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Time Tracker</h1>
+            <p className="text-gray-600">Manage your contractor hours</p>
+          </div>
+          <button
+            onClick={() => setIsInvoiceModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer shadow-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Generate Invoice
+          </button>
         </header>
 
         {error && (
@@ -474,6 +430,13 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Invoice Modal */}
+      <InvoiceModal 
+        isOpen={isInvoiceModalOpen} 
+        onClose={() => setIsInvoiceModalOpen(false)} 
+        entries={entries}
+      />
     </div>
   )
 }
