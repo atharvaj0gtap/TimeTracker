@@ -31,7 +31,7 @@ export const INVOICE_CONFIG = {
   payPeriod: {
     referenceStartDate: '2025-11-09', // Nov 9, 2025 (Sunday)
     periodLengthDays: 14, // 2 weeks
-    paymentDaysAfterPeriodEnd: 7, // Friday after 2nd Monday
+    paymentDaysAfterPeriodEnd: 6, // Friday after period ends (Saturday + 6 = Friday)
   },
 }
 
