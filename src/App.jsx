@@ -33,6 +33,14 @@ function App() {
   useEffect(() => {
     const handleClickOutside = async (event) => {
       if (editingRowRef.current && !editingRowRef.current.contains(event.target) && editingIndexRef.current !== null) {
+        // Validate hours is not negative
+        if (Number(editDataRef.current.Hours) < 0) {
+          setError('Hours cannot be negative')
+          setEditingIndex(null)
+          setEditData(null)
+          return
+        }
+        
         // Save the edit with recalculated invoice
         try {
           const invoiceNumber = getInvoiceNumber(editDataRef.current.Date)
@@ -89,6 +97,13 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validate hours is not negative
+    if (Number(formData.Hours) < 0) {
+      setError('Hours cannot be negative')
+      return
+    }
+    
     try {
       // Auto-calculate invoice number based on date
       const invoiceNumber = getInvoiceNumber(formData.Date)
@@ -163,6 +178,12 @@ function App() {
   }
 
   const handleSaveEdit = async () => {
+    // Validate hours is not negative
+    if (Number(editData.Hours) < 0) {
+      setError('Hours cannot be negative')
+      return
+    }
+    
     try {
       // Recalculate invoice number based on the edited date
       const invoiceNumber = getInvoiceNumber(editData.Date)
@@ -265,6 +286,7 @@ function App() {
                   <input
                     type="number"
                     step="0.25"
+                    min="0"
                     name="Hours"
                     value={formData.Hours}
                     onChange={handleChange}
@@ -324,16 +346,16 @@ function App() {
                         <td colSpan="6" className="px-6 py-4 text-center text-gray-500">No entries found. Start working!</td>
                       </tr>
                     ) : (
-                      entries.map((entry, index) => (
+                      [...entries].map((entry, idx) => ({ entry, originalIndex: idx })).reverse().map(({ entry, originalIndex }) => (
                         <tr 
-                          key={index}
-                          ref={editingIndex === index ? editingRowRef : null}
-                          className={editingIndex === index 
+                          key={originalIndex}
+                          ref={editingIndex === originalIndex ? editingRowRef : null}
+                          className={editingIndex === originalIndex 
                             ? "bg-blue-50 ring-2 ring-blue-500 ring-inset" 
                             : "hover:bg-gray-50 group"
                           }
                         >
-                          {editingIndex === index ? (
+                          {editingIndex === originalIndex ? (
                             <>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 <input
@@ -370,6 +392,7 @@ function App() {
                                 <input
                                   type="number"
                                   step="0.25"
+                                  min="0"
                                   name="Hours"
                                   value={editData.Hours}
                                   onChange={handleEditChange}
@@ -390,7 +413,7 @@ function App() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                 <button
-                                  onClick={() => handleDelete(index)}
+                                  onClick={() => handleDelete(originalIndex)}
                                   className="text-gray-400 hover:text-red-600 cursor-pointer transition-colors"
                                   title="Delete"
                                 >
@@ -402,14 +425,14 @@ function App() {
                             </>
                           ) : (
                             <>
-                              <td onClick={() => handleEdit(index)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer transition-colors">{entry.Date}</td>
-                              <td onClick={() => handleEdit(index)} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 cursor-pointer transition-colors">{entry.Task}</td>
-                              <td onClick={() => handleEdit(index)} className="px-6 py-4 text-sm text-gray-500 whitespace-pre-wrap cursor-pointer transition-colors">{entry.Description}</td>
-                              <td onClick={() => handleEdit(index)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer transition-colors">{entry.Hours}</td>
-                              <td onClick={() => handleEdit(index)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer transition-colors">{entry.Invoice || '-'}</td>
+                              <td onClick={() => handleEdit(originalIndex)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer transition-colors">{entry.Date}</td>
+                              <td onClick={() => handleEdit(originalIndex)} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 cursor-pointer transition-colors">{entry.Task}</td>
+                              <td onClick={() => handleEdit(originalIndex)} className="px-6 py-4 text-sm text-gray-500 whitespace-pre-wrap cursor-pointer transition-colors">{entry.Description}</td>
+                              <td onClick={() => handleEdit(originalIndex)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer transition-colors">{entry.Hours}</td>
+                              <td onClick={() => handleEdit(originalIndex)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer transition-colors">{entry.Invoice || '-'}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                 <button
-                                  onClick={() => handleDelete(index)}
+                                  onClick={() => handleDelete(originalIndex)}
                                   className="text-gray-400 hover:text-red-600 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                                   title="Delete"
                                 >
