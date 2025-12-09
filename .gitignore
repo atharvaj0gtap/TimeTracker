@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Data files (contains personal time tracking data)
+Tracker.xlsx
+*.xlsx
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
