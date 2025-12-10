@@ -2,6 +2,15 @@ import { useState, useEffect, useRef } from 'react'
 import { getInvoiceNumber, getPayPeriodRange } from './utils/invoiceUtils'
 import InvoiceModal from './components/InvoiceModal'
 
+// Get today's date in YYYY-MM-DD format using local timezone
+const getLocalDateString = () => {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function App() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
@@ -9,7 +18,7 @@ function App() {
   const [formData, setFormData] = useState({
     Task: '',
     Description: '',
-    Date: new Date().toISOString().split('T')[0],
+    Date: getLocalDateString(),
     Hours: ''
   })
   const [editingIndex, setEditingIndex] = useState(null)
@@ -129,7 +138,7 @@ function App() {
       setFormData({
         Task: '',
         Description: '',
-        Date: new Date().toISOString().split('T')[0],
+        Date: getLocalDateString(),
         Hours: ''
       })
     } catch (err) {
