@@ -69,13 +69,13 @@ export const generateInvoicePDF = (invoiceData) => {
   let dateYPos = 50
   doc.setFontSize(10)
   doc.setTextColor(...lightGray)
-  doc.text('Issue Date:', pageWidth - 68, dateYPos)
+  doc.text('Issue Date:', pageWidth - 70, dateYPos)
   doc.setTextColor(...textColor)
   doc.text(formatInvoiceDate(new Date()), pageWidth - 20, dateYPos, { align: 'right' })
   
   dateYPos += 7
   doc.setTextColor(...lightGray)
-  doc.text('Due Date:', pageWidth - 68, dateYPos)
+  doc.text('Due Date:', pageWidth - 70, dateYPos)
   doc.setTextColor(...textColor)
   doc.text(formatInvoiceDate(paymentDate), pageWidth - 20, dateYPos, { align: 'right' })
   
@@ -127,8 +127,18 @@ export const generateInvoicePDF = (invoiceData) => {
     },
     margin: { left: 20, right: 20 },
     tableWidth: 'auto',
-  })  // Summary section
+  })
+  
+  // Summary section - check if we need a new page
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const summaryHeight = 100 // Space needed for summary + payment instructions
   yPos = doc.lastAutoTable.finalY + 15
+  
+  // If not enough space for summary, add a new page
+  if (yPos + summaryHeight > pageHeight - 20) {
+    doc.addPage()
+    yPos = 20
+  }
   
   // Summary box
   const summaryX = pageWidth - 90
@@ -165,6 +175,18 @@ export const generateInvoicePDF = (invoiceData) => {
   yPos += 7
   doc.setTextColor(...textColor)
   doc.text(`Payment to be E-transferred to ${INVOICE_CONFIG.contractor.paymentEmail}`, 20, yPos)
+  
+  // Footer - add to all pages
+  const totalPages = doc.internal.getNumberOfPages()
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i)
+    const footerY = pageHeight - 15
+    doc.setFontSize(9)
+    doc.setTextColor(...lightGray)
+    if (totalPages > 1) {
+      doc.text(`Page ${i} of ${totalPages}`, pageWidth - 20, footerY, { align: 'right' })
+    }
+  }
   
   // Save the PDF
   doc.save(`${invoiceNumber}.pdf`)
